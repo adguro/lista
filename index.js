@@ -1,11 +1,12 @@
 const express = require('express')
 const cors = require('cors')
 const routerApi = require('./routes')
-
-const { logErrors, errorHandler, boomErrorHandler } = require('./middlewares/error.handler')
+const { checkApiKey } = require('./middlewares/auth.handler');
+const { logErrors, errorHandler, boomErrorHandler, ormErrorHandler } = require('./middlewares/error.handler');
+const { config } = require('./config/config')
 
 const app = express()
-const port = 3000
+const port = config.port || 3000;
 
 app.use(express.json())
 
@@ -23,38 +24,24 @@ app.use(express.json())
 // app.use(cors(options))
 
 app.use(cors())
+
+require('./utils/auth');
+
 app.get('/', (req, res) => res.send('Hello world'))
 
-// app.get('/users', (req, res) => {
-//     const { limit, offset } = req.query
-//     if (limit && offset){
-//         res.json({
-//             limit,
-//             offset
-//         })
-//     } else {
-//         res.send('No hay parámetros')
-//     }
-// })
-
-// app.get('/categories/:categoryId/products/:productId', (req, res) => {
-//     const { categoryId, productId } = req.params
-//     res.json({
-//         categoryId,
-//         productId,
-//         price: 1000
-//     })
-// })
+app.get('/nueva-ruta', checkApiKey, (req, res) => {
+    res.send('Hola, soy una nueva ruta');
+  });
 
 routerApi(app)
 
 app.use(logErrors)
+app.use(ormErrorHandler);
 app.use(boomErrorHandler)
 app.use(errorHandler)
 
 app.listen(port, () => {
     console.log(`Servidor en puerto ${port}`)
-
 })
 
 
